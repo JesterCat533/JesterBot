@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JesterBot AI Command Publisher</title>
     
-    <!-- Firebase SDK Imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -28,19 +27,38 @@
             --color-accent-red: #ff003c; /* Vibrant red for accents */
             --color-accent-red-hover: #e00035; /* Slightly darker red on hover */
             --color-glow-red: #ff003c; /* Red for glow effects */
+            --color-current-accent: var(--color-accent-red); /* Dynamically set accent */
         }
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--color-body-bg); 
             color: var(--color-text-primary);
         }
+        
+        /* Dynamic Theme Application */
+        .accent-text { color: var(--color-current-accent); }
+        .accent-bg { background-color: var(--color-current-accent); }
+        .accent-bg-hover:hover { background-color: var(--color-accent-red-hover); }
+        .red-glow-button {
+            box-shadow: 0 0 8px rgba(255, 0, 60, 0.4); 
+            border-color: var(--color-current-accent);
+        }
+        .red-glow-button:hover {
+            box-shadow: 0 0 12px rgba(255, 0, 60, 0.6);
+        }
+        .circular-send-button {
+            border: 1px solid var(--color-current-accent); 
+            box-shadow: 0 0 8px rgba(255, 0, 60, 0.4); 
+        }
+        .circular-send-button svg {
+            color: var(--color-current-accent); 
+        }
 
-        /* --- New LED Background Effect --- */
+        /* --- LED Background Effect --- */
         .led-background {
             position: relative;
             z-index: 0; 
         }
-        /* Fixed overlay for the glowing grid pattern */
         .led-background::before {
             content: '';
             position: fixed;
@@ -49,10 +67,9 @@
             width: 100%;
             height: 100%;
             z-index: -1;
-            opacity: 0.15; /* Subtler opacity */
-            /* Creates a simple, glowing dot grid pattern */
+            opacity: 0.15; 
             background: 
-                radial-gradient(circle, var(--color-accent-red) 1px, transparent 1px) center center / 40px 40px;
+                radial-gradient(circle, var(--color-current-accent) 1px, transparent 1px) center center / 40px 40px;
             animation: pulse 10s infinite alternate;
         }
 
@@ -66,13 +83,13 @@
             background-color: var(--color-sidebar-bg); 
             min-width: 250px;
             max-width: 250px;
-            border-color: #333; /* Darker border for separation */
+            border-color: #333; 
         }
         #main-content {
-            background-color: transparent; /* Allow LED BG to show */
+            background-color: transparent; 
             height: 100vh;
             overflow-y: auto;
-            position: relative; /* Needed for absolute positioning of top-right header */
+            position: relative; 
         }
         .code-box {
             background-color: var(--color-module-bg);
@@ -99,32 +116,83 @@
         .red-glow-focus:focus {
             outline: none;
             box-shadow: 0 0 0 3px rgba(255, 0, 60, 0.5); 
-            border-color: var(--color-accent-red);
-        }
-        .red-glow-button {
-            box-shadow: 0 0 8px rgba(255, 0, 60, 0.4); 
-        }
-        .red-glow-button:hover {
-            box-shadow: 0 0 12px rgba(255, 0, 60, 0.6);
+            border-color: var(--color-current-accent);
         }
         .red-glow-icon:hover {
-            color: var(--color-accent-red);
+            color: var(--color-current-accent);
             filter: drop-shadow(0 0 3px rgba(255, 0, 60, 0.5));
         }
         
-        /* Specific styling for the circular send button */
-        .circular-send-button {
-            background-color: #000; 
-            border: 1px solid var(--color-accent-red); 
-            box-shadow: 0 0 8px rgba(255, 0, 60, 0.4); 
+        /* Modal Styles */
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.8);
         }
-        .circular-send-button:hover {
-            background-color: #111; 
-            box-shadow: 0 0 12px rgba(255, 0, 60, 0.6);
+        .modal-content {
+            background-color: var(--color-module-bg);
+            border: 1px solid #333;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
-        .circular-send-button svg {
-            color: var(--color-accent-red); 
+
+        /* Toggle Switch Styles (FIXED for color theme) */
+        #chatModeToggle:checked + .toggle-bg {
+            background-color: var(--color-current-accent) !important; /* Use sibling selector for background color */
         }
+        .toggle-dot {
+            transition: transform 0.2s ease;
+        }
+        /* Ensures the dot moves when checked */
+        #chatModeToggle:checked ~ .toggle-dot {
+            transform: translateX(1.5rem);
+        }
+
+        /* Pricing Card Styles */
+        .price-card {
+            background-color: #0d0d0d;
+            border: 1px solid #333;
+            transition: all 0.3s;
+        }
+        .price-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--color-current-accent);
+        }
+
+        /* Price Text Effects */
+        .luxury-price-pro {
+            color: #3498db; /* Blue for Pro */
+            text-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+        }
+        .luxury-price-premium-container {
+             display: flex;
+             align-items: center;
+             justify-content: center;
+        }
+
+        /* Animation for Premium Price Hover */
+        .luxury-price-premium {
+            color: #ffcc00; /* Gold for Premium */
+            text-shadow: 0 0 8px rgba(255, 204, 0, 0.8), 0 0 15px rgba(255, 204, 0, 0.5);
+            /* Reset base animation from previous version */
+            animation: none; 
+            display: flex; /* Use flex to wrap and position spans */
+        }
+        
+        /* Apply individual character style */
+        .luxury-price-premium > span {
+            transition: transform 0.2s ease-out;
+            display: inline-block;
+        }
+        
+        /* Hover effect on the container to trigger individual span transforms */
+        .luxury-price-premium:hover > span {
+            /* Example: Horizontal jump (translateX) and slight scale up */
+            transform: translateX(1px) scale(1.05); 
+        }
+        
+        /* Optional: Add a subtle delay to make it look like a wave */
+        .luxury-price-premium:hover > span:nth-child(1) { transition-delay: 0s; }
+        .luxury-price-premium:hover > span:nth-child(2) { transition-delay: 0.05s; }
+        .luxury-price-premium:hover > span:nth-child(3) { transition-delay: 0.1s; }
+        .luxury-price-premium:hover > span:nth-child(4) { transition-delay: 0.15s; }
     </style>
 </head>
 <body class="flex min-h-screen led-background">
@@ -133,21 +201,20 @@
     <div id="sidebar" class="flex flex-col p-4 border-r border-gray-900 shadow-xl z-20">
         
         <header class="mb-8 flex items-center justify-between">
-            <h1 class="text-2xl font-semibold text-gray-200">JesterBot<span class="text-xs ml-1 text-[var(--color-accent-red)]">beta</span></h1>
+            <h1 class="text-2xl font-semibold text-gray-200">JesterBot<span class="text-xs ml-1 accent-text">beta</span></h1>
             
-            <svg class="w-6 h-6 text-gray-400 cursor-pointer red-glow-icon transition duration-150 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" onclick="handleMockClick('User Settings')"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <svg class="w-6 h-6 text-gray-400 cursor-pointer red-glow-icon transition duration-150 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" onclick="toggleModal('settingsModal')"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
         </header>
 
         
-        <button id="newCommandButton" class="bg-[var(--color-accent-red)] hover:bg-[var(--color-accent-red-hover)] text-white font-semibold py-2 px-3 rounded-lg flex items-center justify-center mb-6 transition duration-150 red-glow-button" onclick="handleMockClick('New Command')">
+        <button id="newChatButton" class="accent-bg hover:bg-[var(--color-accent-red-hover)] text-white font-semibold py-2 px-3 rounded-lg flex items-center justify-center mb-6 transition duration-150 red-glow-button" onclick="toggleModal('newChatModal')">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-            New Command
+            New Chat
         </button>
 
         
-        <div class="flex-grow flex items-center justify-center text-gray-600 text-sm italic mb-4">
-            No active projects.
-        </div>
+        <div id="chatListContainer" class="flex-grow flex flex-col space-y-2 overflow-y-auto">
+            </div>
 
         
         <div class="mt-auto pt-4 border-t border-gray-800">
@@ -170,16 +237,16 @@
 
         
         <div class="mt-4">
-            <button class="flex items-center space-x-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-200 transition duration-150 red-glow-button border border-gray-700 w-full justify-start" onclick="handleMockClick('Discord Link')">
-                
+            <a href="https://discord.gg/dh8hd5VU5P" target="_blank" class="flex items-center space-x-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-200 transition duration-150 red-glow-button border border-gray-700 w-full justify-start">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M20.218 6.545c-2.483-1.847-5.467-2.903-8.47-2.903-3.003 0-5.987 1.056-8.47 2.903-.787.585-.852 1.758-.14 2.298l.613.483c.712.54 1.83.433 2.457-.253.25-.275.645-.268.892.007.452.493.953 1.516 1.378-.857.733-1.93 1.258-3.085 1.488-.23.046-.437.186-.54.407-.156.335-.04.72.26.945.312.227.702.213.978-.02 1.62-1.39 3.428-2.18 5.32-2.18s3.7.79 5.32 2.18c.277.237.667.25.978.02.3-.225.416-.61.26-.945-.103-.22-.31-.36-.54-.407-1.155-.23-2.228-.755-3.085-1.488.55-.425 1.064-.885 1.516-1.378.247-.275.642-.282.892-.007.627.686 1.745.793 2.457.253l.613-.483c.712-.54.647-1.713-.14-2.298zM9.5 13a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm5 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3z"/>
+                    <path d="M19.78 2.21A1.73 1.73 0 0018 1.95a1.71 1.71 0 00-1.6 1.15c-1.3.4-2.73.65-4.18.65S6.17 3.5 4.87 3.1a1.73 1.73 0 00-1.6-1.15 1.73 1.73 0 00-1.78 1.9c.28 2.38 1.25 4.5 2.68 6.22 1.34 1.63 2.92 2.87 4.7 3.65l.11.04c.06.02.12.04.18.04.06 0 .12-.02.18-.04l.11-.04c1.78-.78 3.36-2.02 4.7-3.65 1.43-1.72 2.4-3.84 2.68-6.22a1.73 1.73 0 00-1.78-1.9zm-7.78 10.96c-1.36 0-2.46-1.1-2.46-2.46s1.1-2.46 2.46-2.46 2.46 1.1 2.46 2.46-1.1 2.46-2.46 2.46z"/>
+                    <path d="M12 17.5c-1.3 0-2.58-.28-3.7-.84.2.22.42.44.64.65l.08.07c.56.54 1.25.96 1.98 1.27.7.3 1.45.44 2.21.44s1.51-.14 2.21-.44c.73-.31 1.42-.73 1.98-1.27l.08-.07c.22-.21.44-.43.64-.65-1.12.56-2.4.84-3.7.84z"/>
                 </svg>
                 <div class="text-xs text-left">
                     <p>Discord</p>
                     <p class="text-gray-500 -mt-0.5">Join to chat</p>
                 </div>
-            </button>
+            </a>
         </div>
     </div>
 
@@ -189,20 +256,23 @@
         
         <div class="absolute top-8 right-8 flex items-center space-x-4 z-20"> 
 
-            <svg class="w-5 h-5 text-gray-400 cursor-pointer red-glow-icon transition duration-150" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" onclick="handleMockClick('User Settings')"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.593.362 1.258.489 1.905.372z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            <svg id="settingsButton" class="w-5 h-5 text-gray-400 cursor-pointer red-glow-icon transition duration-150" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" onclick="toggleModal('settingsModal')"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.593.362 1.258.489 1.905.372z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
 
             
-            <button class="bg-[var(--color-accent-red)] hover:bg-[var(--color-accent-red-hover)] text-white font-semibold py-1.5 px-4 rounded-full text-sm transition duration-150 red-glow-button" onclick="handleMockClick('Upgrade to Pro')">
+            <button class="accent-bg hover:bg-[var(--color-accent-red-hover)] text-white font-semibold py-1.5 px-4 rounded-full text-sm transition duration-150 red-glow-button" onclick="toggleModal('pricingModal')">
                 Upgrade to Pro
             </button>
         </div>
 
         
         <div class="flex flex-col items-center justify-center flex-grow w-full h-full relative z-10 pt-10"> 
+            
+            <div id="chatDisplayContainer" class="w-full max-w-lg flex-grow overflow-y-auto mb-4 p-4 space-y-4 bg-[var(--color-sidebar-bg)] rounded-xl border border-gray-800 hidden">
+                </div>
 
-            <div class="w-full max-w-lg mb-8 text-center relative z-10">
-                <h2 class="text-3xl font-light text-gray-100 mb-2">Describe a game mechanic...</h2>
-                <p class="text-sm text-gray-400">JesterBot generates and publishes the Luau code directly to your Roblox Studio.</p>
+            <div id="promptHeader" class="w-full max-w-lg mb-8 text-center relative z-10">
+                <h2 class="text-3xl font-light text-gray-100 mb-2" id="mainPromptTitle">Describe a game mechanic...</h2>
+                <p class="text-sm text-gray-400" id="mainPromptSubtitle">JesterBot generates and publishes the Luau code directly to your Roblox Studio.</p>
             </div>
             
             <div class="w-full max-w-lg relative z-10">
@@ -221,8 +291,20 @@
                 </button>
             </div>
 
+            <div class="mt-4 flex items-center space-x-3 relative z-10">
+                <span class="text-sm text-gray-400">Normal Chat</span>
+                <label for="chatModeToggle" class="flex items-center cursor-pointer">
+                    <div class="relative">
+                        <input type="checkbox" id="chatModeToggle" class="sr-only" checked onchange="handleChatModeChange(this.checked)">
+                        <div class="block bg-gray-600 w-12 h-6 rounded-full toggle-bg transition duration-200 ease-in-out"></div>
+                        <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full shadow toggle-dot"></div>
+                    </div>
+                </label>
+                <span class="text-sm font-bold accent-text">Direct Game Input</span>
+            </div>
+
             
-            <div id="loadingIndicator" class="hidden mt-4 flex items-center space-x-2 text-[var(--color-accent-red)] relative z-10">
+            <div id="loadingIndicator" class="hidden mt-4 flex items-center space-x-2 accent-text relative z-10">
                 <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -241,17 +323,131 @@
             <div id="resultSection" class="hidden">
                 <h3 class="text-lg font-bold text-gray-300 mb-2">Published Code Preview (Saved to Firestore):</h3>
                 <pre id="codeOutput" class="code-box p-4 rounded-lg text-sm overflow-auto max-h-48 red-glow-focus"></pre>
-                <p id="publishStatus" class="mt-2 text-sm text-[var(--color-accent-red)] font-medium"></p>
+                <p id="publishStatus" class="mt-2 text-sm accent-text font-medium"></p>
             </div>
         </div>
     </main>
+    
+    <div id="newChatModal" class="fixed inset-0 hidden items-center justify-center z-50 modal-overlay" onclick="closeModalOutside(event, 'newChatModal')">
+        <div class="modal-content w-full max-w-md p-6 rounded-xl transform transition-all scale-100" onclick="event.stopPropagation()">
+            <h3 class="text-xl font-bold mb-4">Name Your New Chat</h3>
+            <p class="text-gray-400 mb-4 text-sm">Give your conversation a clear title, like "Inventory System" or "Player Movement."</p>
+            <input type="text" id="newChatNameInput" placeholder="e.g., Flying Mechanic Code" 
+                   class="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg red-glow-focus text-gray-100 mb-4" />
+            <div class="flex justify-end space-x-3">
+                <button onclick="toggleModal('newChatModal')" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-gray-200 transition">Cancel</button>
+                <button onclick="createNewChat()" class="px-4 py-2 accent-bg hover:bg-[var(--color-accent-red-hover)] rounded-lg text-white transition red-glow-button">Create Chat</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="settingsModal" class="fixed inset-0 hidden items-center justify-center z-50 modal-overlay" onclick="closeModalOutside(event, 'settingsModal')">
+        <div class="modal-content w-full max-w-lg p-8 rounded-xl transform transition-all scale-100" onclick="event.stopPropagation()">
+            <h3 class="text-2xl font-bold mb-6">Settings: Color Customization</h3>
+            
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <label class="text-gray-300 font-medium">Select Accent Color:</label>
+                    <div class="flex space-x-4">
+                        <button class="w-8 h-8 rounded-full bg-red-600 ring-2 ring-transparent transition hover:ring-white" onclick="changeAccentColor('#ff003c')"></button>
+                        <button class="w-8 h-8 rounded-full bg-blue-600 ring-2 ring-transparent transition hover:ring-white" onclick="changeAccentColor('#3498db')"></button>
+                        <button class="w-8 h-8 rounded-full bg-green-600 ring-2 ring-transparent transition hover:ring-white" onclick="changeAccentColor('#2ecc71')"></button>
+                        <button class="w-8 h-8 rounded-full bg-purple-600 ring-2 ring-transparent transition hover:ring-white" onclick="changeAccentColor('#9b59b6')"></button>
+                        <button class="w-8 h-8 rounded-full bg-yellow-500 ring-2 ring-transparent transition hover:ring-white" onclick="changeAccentColor('#f1c40f')"></button>
+                    </div>
+                </div>
+                
+                <p class="text-sm text-gray-500 pt-4">This will change the color of all buttons, accents, and the background glow.</p>
+            </div>
+            
+            <div class="flex justify-end mt-8">
+                <button onclick="toggleModal('settingsModal')" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-gray-200 transition">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="pricingModal" class="fixed inset-0 hidden items-center justify-center z-50 modal-overlay" onclick="closeModalOutside(event, 'pricingModal')">
+        <div class="modal-content w-full max-w-4xl p-8 rounded-xl transform transition-all scale-100" onclick="event.stopPropagation()">
+            <h3 class="text-3xl font-bold mb-2 text-center accent-text">Upgrade Your JesterBot Experience</h3>
+            <p class="text-gray-400 mb-8 text-center">Find the perfect plan for your Roblox development needs.</p>
+            
+            <div class="grid grid-cols-3 gap-6">
+                
+                <div class="price-card p-6 rounded-xl flex flex-col justify-between">
+                    <div>
+                        <h4 class="text-2xl font-bold text-gray-200 mb-2">Free</h4>
+                        <p class="text-5xl font-extrabold text-gray-500 mb-6">$0</p>
+                        <ul class="text-gray-400 space-y-2 text-sm">
+                            <li class="flex items-start"><span class="accent-text mr-2">✓</span> Limited Luau Code Generation</li>
+                            <li class="flex items-start"><span class="accent-text mr-2">✓</span> Standard Chat Mode (no game-specific system prompt)</li>
+                            <li class="flex items-start"><span class="text-red-500 mr-2">✗</span> No Direct Game Input</li>
+                            <li class="flex items-start"><span class="text-red-500 mr-2">✗</span> Limited Chat History (5 Chats)</li>
+                        </ul>
+                    </div>
+                    <button class="mt-6 w-full py-2 border border-gray-700 text-gray-400 rounded-lg hover:bg-gray-800 transition disabled:opacity-50" disabled>
+                        Current Plan
+                    </button>
+                </div>
+
+                <div class="price-card p-6 rounded-xl flex flex-col justify-between border-blue-600 border-2">
+                    <div>
+                        <h4 class="text-2xl font-bold text-blue-400 mb-2">Pro</h4>
+                        <p class="text-6xl font-extrabold mb-6 luxury-price-pro">$19</p>
+                        <ul class="text-gray-300 space-y-2 text-sm">
+                            <li class="flex items-start"><span class="text-blue-400 mr-2">✓</span> **Unlimited** Code Generation</li>
+                            <li class="flex items-start"><span class="text-blue-400 mr-2">✓</span> Standard & **Direct Game Input** Modes</li>
+                            <li class="flex items-start"><span class="text-blue-400 mr-2">✓</span> Full Chat History</li>
+                            <li class="flex items-start"><span class="accent-text mr-2">✓</span> Priority Support</li>
+                            <li class="flex items-start"><span class="text-red-500 mr-2">✗</span> Single User License</li>
+                        </ul>
+                    </div>
+                    <button class="mt-6 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition red-glow-button">
+                        Get Pro
+                    </button>
+                </div>
+
+                <div class="price-card p-6 rounded-xl flex flex-col justify-between border-yellow-500 border-2 shadow-xl" style="box-shadow: 0 0 15px rgba(255, 204, 0, 0.5);">
+                    <div>
+                        <h4 class="text-2xl font-bold text-yellow-400 mb-2">Premium</h4>
+                        <div class="luxury-price-premium-container">
+                            <span class="text-7xl font-extrabold mb-6 luxury-price-premium">
+                                <span>$</span>
+                                <span>4</span>
+                                <span>9</span>
+                            </span>
+                        </div>
+                        <ul class="text-gray-200 space-y-2 text-sm">
+                            <li class="flex items-start"><span class="text-yellow-400 mr-2">✓</span> **Everything in Pro**</li>
+                            <li class="flex items-start"><span class="text-yellow-400 mr-2">✓</span> **Multi-Seat Team License**</li>
+                            <li class="flex items-start"><span class="text-yellow-400 mr-2">✓</span> Early Access to New Features (Beta)</li>
+                            <li class="flex items-start"><span class="text-yellow-400 mr-2">✓</span> Custom Code Snippet Library</li>
+                        </ul>
+                    </div>
+                    <button class="mt-6 w-full py-2 bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold rounded-lg transition red-glow-button">
+                        Go Premium
+                    </button>
+                </div>
+                
+            </div>
+            
+            <div class="flex justify-end mt-8">
+                <button onclick="toggleModal('pricingModal')" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-gray-200 transition">Close</button>
+            </div>
+        </div>
+    </div>
+
 
     <script>
         const GEMINI_MODEL = 'gemini-2.5-flash-preview-09-2025';
-        const API_KEY = ""; // Kept empty for Canvas auto-injection
+        const API_KEY = "AIzaSyDgusihjRRLQyv7p6cyN2jfw92zwDDpuEE"; // Kept empty for Canvas auto-injection
         
+        // --- FIREBASE CONFIGURATION INJECTION ---
+        // This string contains the configuration for Firebase initialization, replacing the external configuration block.
+        const __firebase_config = '{"apiKey":"AIzaSyBkdj9lQTvbNB-EcP9hvCH-_1CqZGoFB8g","authDomain":"appauthe-baac9.firebaseapp.com","projectId":"appauthe-baac9","storageBucket":"appauthe-baac9.firebasestorage.app","messagingSenderId":"689371352484","appId":"1:689371352484:web:13232c877aa239a7cec531","measurementId":"G-6PKQS2PED0"}';
+        // ---------------------------------------
+
         // --- ROBlox OAUTH Configuration ---
-        const CLIENT_ID = '6498265509897195539'; // The Client ID from your Roblox App dashboard
+        const CLIENT_ID = '6498265509897195539';
         const REDIRECT_URI = 'https://jestercat533.github.io/JesterBot/';
         const OAUTH_SCOPES = 'openid profile asset:read legacy:universe:manage asset:write'; 
         const AUTHORIZE_URL = 'https://auth.roblox.com/oauth/v1/authorize';
@@ -264,6 +460,22 @@
         let isAuthReady = false;
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         // ------------------------
+        
+        // --- APP STATE ---
+        let isGameInputMode = true; // Default to Direct Game Input
+        let currentChatId = null;
+        
+        // Updated mock chats to include history property
+        let mockChats = [
+            { id: 'mock-1', name: 'Player Leaderboard', type: 'Game Input', active: true, history: [] },
+            { id: 'mock-2', name: 'Terrain Generator Code', type: 'Game Input', active: false, history: [] },
+            { id: 'mock-3', name: 'Lore & Character Bio', type: 'Normal Chat', active: false, history: [
+                { role: 'model', text: 'Welcome to JesterBot! How can I help you design your Roblox game today?' }
+            ]}
+        ];
+        
+        // Global for the currently active chat's messages
+        let chatHistory = []; 
 
         // DOM Elements
         const promptInput = document.getElementById('promptInput');
@@ -278,15 +490,190 @@
         const errorMessage = document.getElementById('errorMessage');
         const userIdDisplay = document.getElementById('userIdDisplay');
         const userIdValue = document.getElementById('userIdValue');
+        const chatListContainer = document.getElementById('chatListContainer');
+        const mainPromptTitle = document.getElementById('mainPromptTitle');
+        const mainPromptSubtitle = document.getElementById('mainPromptSubtitle');
+        const chatModeToggle = document.getElementById('chatModeToggle');
+        
+        // New DOM elements for chat mode functionality
+        const promptHeader = document.getElementById('promptHeader');
+        const chatDisplayContainer = document.getElementById('chatDisplayContainer');
 
 
-        const systemPrompt = `You are a specialized Luau (Roblox scripting) code generation assistant for Roblox Studio Plugins. Your task is to generate ONLY the clean, runnable Luau code that fulfills the user's request.
+        const SYSTEM_PROMPTS = {
+            GAME_INPUT: `You are a specialized Luau (Roblox scripting) code generation assistant for Roblox Studio Plugins. Your task is to generate ONLY the clean, runnable Luau code that fulfills the user's request.
 
 RULES:
 1. The code must be a complete Luau script intended for immediate execution by the plugin's 'loadstring' function.
 2. Your output MUST start with 'local function Execute()' and end with 'Execute()' for modification commands.
 3. Use 'game' to reference top-level services (e.g., game.Workspace, game:GetService("Selection")).
-4. DO NOT include any explanatory text, markdown formatting (like \`\`\`luau), or comments. Only output the code.`;
+4. DO NOT include any explanatory text, markdown formatting (like \`\`\`luau), or comments. Only output the code.`,
+            
+            NORMAL_CHAT: `You are a helpful and creative conversational assistant named JesterBot. Respond to the user's query in a friendly and informative manner. Do not generate code unless specifically asked to, and if asked, provide it within a standard markdown code block (\`\`\`lua).`
+        };
+
+        // --- MODAL FUNCTIONS ---
+        window.toggleModal = function(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.toggle('hidden');
+            modal.classList.toggle('flex');
+        }
+
+        function closeModalOutside(event, modalId) {
+            if (event.target.id === modalId) {
+                toggleModal(modalId);
+            }
+        }
+        window.closeModalOutside = closeModalOutside;
+        
+        // --- THEME/COLOR FUNCTIONS ---
+        window.changeAccentColor = function(color) {
+            document.documentElement.style.setProperty('--color-accent-red', color);
+            document.documentElement.style.setProperty('--color-current-accent', color);
+            // Close the modal
+            toggleModal('settingsModal');
+        }
+
+        // --- CHAT SYSTEM FUNCTIONS ---
+        
+        // NEW: Function to render the chat history
+        function renderChatHistory() {
+            chatDisplayContainer.innerHTML = ''; // Clear previous messages
+            
+            if (!isGameInputMode && chatHistory.length > 0) {
+                // Show the chat history container and hide the main prompt header
+                promptHeader.classList.add('hidden');
+                chatDisplayContainer.classList.remove('hidden');
+                
+                chatHistory.forEach(msg => {
+                    const isUser = msg.role === 'user';
+                    const messageEl = document.createElement('div');
+                    messageEl.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`;
+                    
+                    // Note: Added checks for text property existence
+                    const messageText = msg.text || ''; 
+                    
+                    messageEl.innerHTML = `
+                        <div class="max-w-xs sm:max-w-md p-3 rounded-xl ${isUser ? 'accent-bg text-white' : 'bg-gray-700 text-gray-100'}"
+                             style="${isUser ? '' : 'border-top-left-radius: 0;'}">
+                            <span class="text-xs font-semibold block mb-1 ${isUser ? 'text-gray-200' : 'accent-text'}">${isUser ? 'You' : 'JesterBot'}</span>
+                            <p class="text-sm whitespace-pre-wrap">${messageText}</p>
+                        </div>
+                    `;
+                    chatDisplayContainer.appendChild(messageEl);
+                });
+                // Auto-scroll to bottom
+                chatDisplayContainer.scrollTop = chatDisplayContainer.scrollHeight;
+            } else {
+                // Hide the chat history container and show the main prompt header
+                promptHeader.classList.remove('hidden');
+                chatDisplayContainer.classList.add('hidden');
+            }
+        }
+
+        function renderChatList() {
+            chatListContainer.innerHTML = '';
+            
+            if (mockChats.length === 0) {
+                 chatListContainer.innerHTML = '<div class="flex-grow flex items-center justify-center text-gray-600 text-sm italic mb-4">No active chats.</div>';
+                 return;
+            }
+
+            mockChats.forEach(chat => {
+                const button = document.createElement('button');
+                button.className = `w-full px-3 py-2 rounded-lg text-left transition duration-150 ${chat.active ? 'accent-bg text-white shadow-lg' : 'bg-gray-800 hover:bg-gray-700 text-gray-300'}`;
+                button.onclick = () => activateChat(chat.id);
+                button.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs text-gray-500 font-mono">${chat.type === 'Game Input' ? '</>' : '💬'}</span>
+                        <span class="text-sm font-medium truncate">${chat.name}</span>
+                    </div>
+                `;
+                chatListContainer.appendChild(button);
+            });
+        }
+        
+        function activateChat(id) {
+            mockChats.forEach(chat => {
+                chat.active = (chat.id === id);
+            });
+            currentChatId = id;
+            
+            // Load history for the activated chat
+            const activeChat = mockChats.find(chat => chat.id === id);
+            if (activeChat) {
+                chatHistory = activeChat.history; // Load history
+                const newMode = activeChat.type === 'Game Input';
+                
+                // Update the visual toggle state directly
+                chatModeToggle.checked = newMode;
+                
+                // Force call the handler function to apply mode changes
+                handleChatModeChange(newMode); 
+            }
+            
+            // Clear result section for new chat view
+            resultSection.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+            promptInput.value = "";
+            
+            // Render history for the new chat
+            renderChatHistory(); 
+            
+            renderChatList();
+        }
+
+        window.createNewChat = function() {
+            const input = document.getElementById('newChatNameInput');
+            const chatName = input.value.trim();
+            
+            if (chatName.length < 3) {
+                // Use a simple message box to adhere to the rule of not using alert()
+                errorMessage.textContent = "Please enter a longer chat name.";
+                errorMessage.classList.remove('hidden');
+                setTimeout(() => errorMessage.classList.add('hidden'), 3000);
+                return;
+            }
+            
+            const newChatId = `chat-${crypto.randomUUID()}`;
+            const newChat = { 
+                id: newChatId, 
+                name: chatName, 
+                type: isGameInputMode ? 'Game Input' : 'Normal Chat', 
+                active: false,
+                history: isGameInputMode ? [] : [{ role: 'model', text: 'Hello! I am JesterBot, your conversational AI companion.' }]
+            };
+            
+            mockChats.push(newChat);
+            input.value = ''; // Clear input
+            toggleModal('newChatModal');
+            activateChat(newChatId); // Switch to the new chat
+        }
+        
+        window.handleChatModeChange = function(checked) {
+            isGameInputMode = checked;
+            
+            if (isGameInputMode) {
+                mainPromptTitle.textContent = "Describe a game mechanic...";
+                mainPromptSubtitle.textContent = "JesterBot generates and publishes the Luau code directly to your Roblox Studio.";
+            } else {
+                mainPromptTitle.textContent = "Start a conversation with Gemini...";
+                mainPromptSubtitle.textContent = "JesterBot shifts to a general conversational mode.";
+            }
+            
+            // Mock: Update active chat type if one is active
+            if (currentChatId) {
+                 const activeChat = mockChats.find(chat => chat.id === currentChatId);
+                 if (activeChat) {
+                     activeChat.type = isGameInputMode ? 'Game Input' : 'Normal Chat';
+                 }
+            }
+            
+            // Force re-render of chat history/header display
+            renderChatHistory(); 
+            
+            renderChatList();
+        }
 
         // --- FIREBASE INITIALIZATION & AUTH ---
         async function initializeFirebase() {
@@ -331,14 +718,13 @@ RULES:
             }
 
             if (userId) {
-                // User is authenticated via Firebase (Roblox OAuth is simulated success at this point)
+                // Enable button only if we have a user ID (authenticated)
                 generateButton.disabled = false;
-                tokenDisplay.innerHTML = `Status: <span class="font-bold text-[var(--color-accent-red)]">Connected</span>`;
+                tokenDisplay.innerHTML = `Status: <span class="font-bold accent-text">Connected</span>`;
                 connectRobloxButton.classList.add('hidden');
                 userIdValue.textContent = userId;
                 userIdDisplay.classList.remove('hidden');
             } else {
-                // User is not authenticated (or initial sign-in failed)
                 generateButton.disabled = true;
                 tokenDisplay.innerHTML = `Status: <span class="font-bold text-red-400">Disconnected</span> (Firebase Auth Failed)`;
                 connectRobloxButton.classList.remove('hidden');
@@ -390,10 +776,6 @@ RULES:
             const state = urlParams.get('state');
 
             if (code) {
-                // --- CRITICAL SIMULATION ---
-                // In a real app, the server would exchange this 'code' for a secure Access Token.
-                // Here, we use the fact that the 'code' exists (user approved the OAuth flow)
-                // as a trigger to confirm the user session and enable the functionality.
                 
                 errorMessage.textContent = "Roblox connection simulated! (Code received). You can now generate commands and save them to Firestore.";
                 errorMessage.classList.remove('hidden');
@@ -406,11 +788,23 @@ RULES:
 
 
         async function generateCode(userQuery) {
-            // Note: API_KEY is intentionally empty and relies on the Canvas environment
             const apiKey = API_KEY; 
             const apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/" + GEMINI_MODEL + ":generateContent?key=" + apiKey;
+            
+            // Select system prompt based on mode
+            const systemPrompt = isGameInputMode ? SYSTEM_PROMPTS.GAME_INPUT : SYSTEM_PROMPTS.NORMAL_CHAT;
+
+            // Construct contents array from full chat history + new user query
+            const historyContents = chatHistory.map(msg => ({ 
+                role: msg.role === 'model' ? 'model' : 'user', 
+                parts: [{ text: msg.text }] 
+            }));
+
+            // The last entry in historyContents is the user's latest query, which is included.
+            const contentsToSend = historyContents; 
+            
             const payload = {
-                contents: [{ parts: [{ text: userQuery }] }],
+                contents: contentsToSend, 
                 systemInstruction: {
                     parts: [{ text: systemPrompt }]
                 }
@@ -436,7 +830,11 @@ RULES:
                 throw new Error("Gemini API Error: " + (errorBody.error?.message || 'Unknown'));
             }
             const result = await response.json();
-            return cleanCodeOutput(result.candidates?.[0]?.content?.parts?.[0]?.text || "");
+            
+            let text = result.candidates?.[0]?.content?.parts?.[0]?.text || "";
+            
+            // Only clean code output if in game input mode
+            return isGameInputMode ? cleanCodeOutput(text) : text.trim();
         }
 
         // --- FIREBASE PUBLISH COMMAND (Replaces the failed POST) ---
@@ -452,51 +850,96 @@ RULES:
                 luauCode: luauCode,
                 timestamp: Date.now(),
                 status: 'ready',
-                userId: userId // Useful for the plugin to confirm data ownership
+                userId: userId, // Useful for the plugin to confirm data ownership
+                chatId: currentChatId // Link the command to the current chat session
             };
 
             await window.firebase.setDoc(window.firebase.doc(db, collectionPath, commandId), commandData);
             
             return commandId;
         }
-
-        generateButton.addEventListener('click', async () => {
+        
+        // Unified function to handle prompt submission
+        async function handlePromptSubmission() {
             const promptText = promptInput.value.trim();
             
             errorMessage.classList.add('hidden');
-            resultSection.classList.add('hidden'); 
-            publishStatus.textContent = '';
-            codeOutput.textContent = '';
             
+            // Clear code preview only if in game mode, else re-render history later
+            if (isGameInputMode) {
+                resultSection.classList.add('hidden'); 
+                publishStatus.textContent = '';
+                codeOutput.textContent = '';
+            }
+
             if (!userId || promptText.length < 10) {
-                errorMessage.textContent = "Please enter a detailed command (at least 10 characters) and ensure Firebase/Roblox connection is ready.";
+                errorMessage.textContent = "Please enter a detailed prompt (at least 10 characters) and ensure Firebase connection is ready.";
                 errorMessage.classList.remove('hidden');
                 return;
             }
 
-            // --- Step 1: Generate Code ---
+            // --- Prep History: Add user message ---
+            chatHistory.push({ role: 'user', text: promptText }); 
+            renderChatHistory(); // Show the new user message immediately
+
+            // --- Step 1: Generate Code/Response ---
             generateButton.disabled = true;
             loadingIndicator.classList.remove('hidden');
-            loadingText.textContent = "Generating Luau code via Gemini...";
+            loadingText.textContent = isGameInputMode ? "Generating Luau code via Gemini..." : "Generating response via Gemini...";
 
-            let generatedCode;
+            let generatedContent;
             try {
-                generatedCode = await generateCode(promptText);
-                codeOutput.textContent = generatedCode;
-                resultSection.classList.remove('hidden');
+                // The generateCode function now uses chatHistory internally
+                generatedContent = await generateCode(promptText); 
+                
+                // Add model response to history
+                chatHistory.push({ role: 'model', text: generatedContent }); 
+                
+                // Update the active chat's history property (Mock persistence)
+                const activeChat = mockChats.find(chat => chat.id === currentChatId);
+                if (activeChat) {
+                    activeChat.history = chatHistory;
+                }
+
+                if (isGameInputMode) {
+                    // Only show code preview in game mode
+                    codeOutput.textContent = generatedContent;
+                    resultSection.classList.remove('hidden');
+                    publishStatus.innerHTML = 'Generated code. Now publishing to Firestore...';
+                } else {
+                    // In chat mode, the output is displayed by renderChatHistory()
+                    renderChatHistory(); 
+                }
+                
             } catch (error) {
                 console.error("Gemini Generation Failed:", error);
                 errorMessage.textContent = error.message;
                 errorMessage.classList.remove('hidden');
+                
+                // Remove the failed user prompt from history
+                chatHistory.pop();
+                renderChatHistory(); // Re-render without the user prompt
+                
                 generateButton.disabled = false;
                 loadingIndicator.classList.add('hidden');
                 return;
             }
+            
+            // If in Normal Chat mode, we stop the *publishing* here.
+            if (!isGameInputMode) {
+                publishStatus.innerHTML = `Response generated. Switch to Direct Game Input mode to publish code.`;
+                generateButton.disabled = false;
+                loadingIndicator.classList.add('hidden');
+                promptInput.value = ""; // Clear input after successful chat response
+                return; 
+            }
 
-            // --- Step 2: Publish Command to Firestore ---
+            // --- Step 2: Publish Command to Firestore (Only in Game Input Mode) ---
             loadingText.textContent = "Saving command to Firestore...";
             try {
-                const commandId = await publishCommand(generatedCode);
+                // Use the last model response (which is the code)
+                const luauCodeToPublish = generatedContent;
+                const commandId = await publishCommand(luauCodeToPublish);
                 
                 publishStatus.innerHTML = `Successfully saved command to **Firestore** (ID: ${commandId.substring(0, 8)}...). The Roblox Studio plugin can now retrieve this command using your **User ID** shown in the sidebar.`;
             } catch (error) {
@@ -506,12 +949,42 @@ RULES:
             } finally {
                 generateButton.disabled = false;
                 loadingIndicator.classList.add('hidden');
+                promptInput.value = ""; // Clear input after successful generation/publishing
+            }
+        }
+
+        // Attach event listener to the button
+        generateButton.addEventListener('click', handlePromptSubmission);
+
+        // Attach event listener for the Enter key on the input
+        promptInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) { // Prevent single line break from sending
+                e.preventDefault(); // Stop default action (e.g., adding a newline)
+                if (!generateButton.disabled) {
+                    handlePromptSubmission();
+                }
             }
         });
 
         document.addEventListener('DOMContentLoaded', () => {
              initializeFirebase();
              handleRobloxCallback();
+             
+             // Initial render of chat list
+             currentChatId = mockChats.find(c => c.active)?.id || null;
+             
+             // Initialize chatHistory globally on load
+             const initialChat = mockChats.find(c => c.id === currentChatId);
+             if (initialChat) {
+                 chatHistory = initialChat.history;
+             }
+             
+             renderChatList();
+             
+             // Set initial mode based on the toggle's 'checked' status
+             isGameInputMode = chatModeToggle.checked;
+             handleChatModeChange(isGameInputMode); 
+             renderChatHistory(); // Initial render for proper display
         });
 
     </script>
