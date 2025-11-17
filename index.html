@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JesterBot AI Command Publisher</title>
+    
+
+<script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom Red & Black Palette */
+        :root {
+            --color-body-bg: #0a0a0a; /* Deepest black */
+            --color-sidebar-bg: #0d0d0d; /* Slightly lighter for contrast */
+            --color-module-bg: #1a1a1a; /* Dark gray for modules/cards */
+            --color-text-primary: #f0f0f0; /* Off-white for main text */
+            --color-text-secondary: #999; /* Lighter grey for secondary text */
+            --color-accent-red: #ff003c; /* Vibrant red for accents */
+            --color-accent-red-hover: #e00035; /* Slightly darker red on hover */
+            --color-glow-red: #ff003c; /* Red for glow effects */
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-body-bg); 
+            color: var(--color-text-primary);
+        }
+
+        /* --- New LED Background Effect --- */
+        .led-background {
+            position: relative;
+            z-index: 0; 
+        }
+        /* Fixed overlay for the glowing grid pattern */
+        .led-background::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.15; /* Subtler opacity */
+            /* Creates a simple, glowing dot grid pattern */
+            background: 
+                radial-gradient(circle, var(--color-accent-red) 1px, transparent 1px) center center / 40px 40px;
+            animation: pulse 10s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1.0); opacity: 0.15; }
+            100% { transform: scale(1.05); opacity: 0.25; }
+        }
+        /* ---------------------------------- */
+
+        #sidebar {
+            background-color: var(--color-sidebar-bg); 
+            min-width: 250px;
+            max-width: 250px;
+            border-color: #333; /* Darker border for separation */
+        }
+        #main-content {
+            background-color: transparent; /* Allow LED BG to show */
+            height: 100vh;
+            overflow-y: auto;
+            position: relative; /* Needed for absolute positioning of top-right header */
+        }
+        .code-box {
+            background-color: var(--color-module-bg);
+            color: var(--color-text-primary);
+            font-family: 'Consolas', 'Monospace', monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            min-height: 150px;
+            border: 1px solid #333;
+        }
+        /* Custom scrollbar style to match dark theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        /* Red Glow Effects */
+        .red-glow-focus:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 0, 60, 0.5); 
+            border-color: var(--color-accent-red);
+        }
+        .red-glow-button {
+            box-shadow: 0 0 8px rgba(255, 0, 60, 0.4); 
+        }
+        .red-glow-button:hover {
+            box-shadow: 0 0 12px rgba(255, 0, 60, 0.6);
+        }
+        .red-glow-icon:hover {
+            color: var(--color-accent-red);
+            filter: drop-shadow(0 0 3px rgba(255, 0, 60, 0.5));
+        }
+        
+        /* Specific styling for the circular send button */
+        .circular-send-button {
+            background-color: #000; 
+            border: 1px solid var(--color-accent-red); 
+            box-shadow: 0 0 8px rgba(255, 0, 60, 0.4); 
+        }
+        .circular-send-button:hover {
+            background-color: #111; 
+            box-shadow: 0 0 12px rgba(255, 0, 60, 0.6);
+        }
+        .circular-send-button svg {
+            color: var(--color-accent-red); 
+        }
+    </style>
+</head>
+<body class="flex min-h-screen led-background">
+
+    
+
+<div id="sidebar" class="flex flex-col p-4 border-r border-gray-900 shadow-xl z-20">
+        
+        
+
+<header class="mb-8 flex items-center justify-between">
+            <h1 class="text-2xl font-semibold text-gray-200">JesterBot<span class="text-xs ml-1 text-[var(--color-accent-red)]">beta</span></h1>
+            
+
+<svg class="w-6 h-6 text-gray-400 cursor-pointer red-glow-icon transition duration-150 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" onclick="handleMockClick('User Settings')"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        </header>
+
+        
+
+<button id="newCommandButton" class="bg-[var(--color-accent-red)] hover:bg-[var(--color-accent-red-hover)] text-white font-semibold py-2 px-3 rounded-lg flex items-center justify-center mb-6 transition duration-150 red-glow-button" onclick="handleMockClick('New Command')">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            New Command
+        </button>
+
+        
+
+<div class="flex-grow flex items-center justify-center text-gray-600 text-sm italic mb-4">
+            No active projects.
+        </div>
+
+        
+
+<div class="mt-auto pt-4 border-t border-gray-800">
+            <h3 class="text-sm font-semibold text-gray-400 mb-2">Bridge Status</h3>
+            <p id="tokenDisplay" class="text-xs text-[var(--color-accent-red)] break-words font-mono">
+                Status: Connected
+            </p>
+            <p class="text-xs text-gray-500 mt-2">API key is securely stored in JS constants.</p>
+        </div>
+
+        
+
+<div class="mt-4">
+            <button class="flex items-center space-x-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-200 transition duration-150 red-glow-button border border-gray-700 w-full justify-start" onclick="handleMockClick('Discord Link')">
+                
+
+<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20.218 6.545c-2.483-1.847-5.467-2.903-8.47-2.903-3.003 0-5.987 1.056-8.47 2.903-.787.585-.852 1.758-.14 2.298l.613.483c.712.54 1.83.433 2.457-.253.25-.275.645-.268.892.007.452.493.966.953 1.516 1.378-.857.733-1.93 1.258-3.085 1.488-.23.046-.437.186-.54.407-.156.335-.04.72.26.945.312.227.702.213.978-.02 1.62-1.39 3.428-2.18 5.32-2.18s3.7.79 5.32 2.18c.277.237.667.25.978.02.3-.225.416-.61.26-.945-.103-.22-.31-.36-.54-.407-1.155-.23-2.228-.755-3.085-1.488.55-.425 1.064-.885 1.516-1.378.247-.275.642-.282.892-.007.627.686 1.745.793 2.457.253l.613-.483c.712-.54.647-1.713-.14-2.298zM9.5 13a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm5 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3z"/>
+                </svg>
+                <div class="text-xs text-left">
+                    <p>Discord</p>
+                    <p class="text-gray-500 -mt-0.5">Join to chat</p>
+                </div>
+            </button>
+        </div>
+    </div>
+
+    
+
+<main id="main-content" class="flex-grow flex flex-col items-center p-8 sm:p-16 z-10">
+        
+        
+
+<div class="absolute top-8 right-8 flex items-center space-x-4 z-20"> 
+
+<svg class="w-5 h-5 text-gray-400 cursor-pointer red-glow-icon transition duration-150" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" onclick="handleMockClick('User Settings')"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.593.362 1.258.489 1.905.372z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+
+            
+
+<button class="bg-[var(--color-accent-red)] hover:bg-[var(--color-accent-red-hover)] text-white font-semibold py-1.5 px-4 rounded-full text-sm transition duration-150 red-glow-button" onclick="handleMockClick('Upgrade to Pro')">
+                Upgrade to Pro
+            </button>
+        </div>
+
+        
+
+<div class="flex flex-col items-center justify-center flex-grow w-full h-full relative z-10 pt-10"> 
+
+<div class="w-full max-w-lg mb-8 text-center relative z-10">
+                <h2 class="text-3xl font-light text-gray-100 mb-2">Describe a game mechanic...</h2>
+                <p class="text-sm text-gray-400">JesterBot generates and publishes the Luau code directly to your Roblox Studio.</p>
+            </div>
+            
+            <div class="w-full max-w-lg relative z-10">
+                <textarea id="promptInput"
+                    class="w-full p-5 pr-16 bg-[var(--color-module-bg)] border border-gray-700 rounded-xl text-lg text-gray-100 red-glow-focus transition duration-150 resize-none shadow-xl"
+                    rows="1"
+                    placeholder="Prompt Here..."
+                ></textarea>
+                
+                
+
+<button id="generateButton"
+                    class="absolute right-3.5 top-1/2 transform -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center transition duration-200 disabled:opacity-30 disabled:hover:bg-black circular-send-button"
+                    title="Generate & Publish Command">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </button>
+            </div>
+
+            
+
+<div id="loadingIndicator" class="hidden mt-4 flex items-center space-x-2 text-[var(--color-accent-red)] relative z-10">
+                <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span id="loadingText">Generating code via Gemini...</span>
+            </div>
+        </div>
+
+        
+
+<div class="w-full max-w-lg mt-auto relative z-10"> 
+
+<div id="errorMessage" class="hidden p-4 bg-red-900 border border-red-700 text-red-300 rounded-lg shadow-xl red-glow-button mb-4">
+                An error occurred during generation.
+            </div>
+
+            <div id="resultSection" class="hidden">
+                <h3 class="text-lg font-bold text-gray-300 mb-2">Published Code Preview:</h3>
+                <pre id="codeOutput" class="code-box p-4 rounded-lg text-sm overflow-auto max-h-48 red-glow-focus"></pre>
+                <p id="publishStatus" class="mt-2 text-sm text-[var(--color-accent-red)] font-medium"></p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const GEMINI_MODEL = 'gemini-2.5-flash-preview-09-2025';
+        const API_KEY = "AIzaSyDgusihjRRLQyv7p6cyN2jfw92zwDDpuEE"; 
+        
+        // Hardcoded API URL
+        const API_URL_ENDPOINT = "http://your-server-api.com/api/studio/"; 
+
+        // --- YOUR SECURE TOKEN FROM OAUTH SIMULATION (kept for functionality) ---
+        const SECURE_TOKEN = 'RBX-CXvhfaEtBEGgTung815aKv0TzTdRpbuMBYK2qToYzWS';
+        let currentSessionId = null; 
+        // -----------------------------------------------------
+
+        // DOM Elements
+        const promptInput = document.getElementById('promptInput');
+        const generateButton = document.getElementById('generateButton');
+        const tokenDisplay = document.getElementById('tokenDisplay');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const loadingText = document.getElementById('loadingText');
+        const resultSection = document.getElementById('resultSection');
+        const codeOutput = document.getElementById('codeOutput');
+        const publishStatus = document.getElementById('publishStatus');
+        const errorMessage = document.getElementById('errorMessage');
+
+        const systemPrompt = `You are a specialized Luau (Roblox scripting) code generation assistant for Roblox Studio Plugins. Your task is to generate ONLY the clean, runnable Luau code that fulfills the user's request.
+
+RULES:
+1. The code must be a complete Luau script intended for immediate execution by the plugin's 'loadstring' function.
+2. Your output MUST start with 'local function Execute()' and end with 'Execute()' for modification commands.
+3. Use 'game' to reference top-level services (e.g., game.Workspace, game:GetService("Selection")).
+4. DO NOT include any explanatory text, markdown formatting (like \`\`\`luau), or comments. Only output the code.`;
+
+        // --- MOCK INTERACTION HANDLER ---
+        function handleMockClick(action) {
+            console.log("Mock Button Clicked:", action);
+            if (action.includes("New Command")) {
+                promptInput.value = "";
+                resultSection.classList.add('hidden');
+                errorMessage.classList.add('hidden');
+            } else {
+                errorMessage.textContent = `Action "${action}" triggered. (Simulated) Check console for log.`;
+                errorMessage.classList.remove('hidden');
+                setTimeout(() => errorMessage.classList.add('hidden'), 3000);
+            }
+        }
+        window.handleMockClick = handleMockClick; // Expose to global scope for inline clicks
+
+        function cleanCodeOutput(text) {
+            let cleaned = text.trim();
+            cleaned = cleaned.replace(/^```(luau|lua)?\s*/i, '');
+            cleaned = cleaned.replace(/```$/, '');
+            return cleaned.trim();
+        }
+
+        function updateAuthState(sessionId) {
+            currentSessionId = sessionId;
+            if (currentSessionId) {
+                generateButton.disabled = false;
+                tokenDisplay.innerHTML = `Status: <span class="font-bold text-[var(--color-accent-red)]">Connected</span>`;
+            } else {
+                generateButton.disabled = true;
+                tokenDisplay.innerHTML = `Status: <span class="font-bold text-red-400">Disconnected</span>`;
+            }
+        }
+
+        function connectSimulated() {
+             const simulatedToken = SECURE_TOKEN || crypto.randomUUID();
+             updateAuthState(simulatedToken);
+        }
+
+        async function generateCode(userQuery) {
+            const apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/" + GEMINI_MODEL + ":generateContent?key=" + API_KEY;
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                }
+            };
+            
+            // Basic Retry Logic (Exponential Backoff)
+            let response;
+            for (let i = 0; i < 3; i++) {
+                try {
+                    response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (response.ok) break;
+                } catch (e) {
+                    console.log(`Fetch attempt ${i + 1} failed.`);
+                }
+                await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+            }
+
+            if (!response || !response.ok) {
+                const errorBody = response ? await response.json() : { error: { message: "Network or Server Error" } };
+                throw new Error("Gemini API Error: " + (errorBody.error?.message || 'Unknown'));
+            }
+            const result = await response.json();
+            return cleanCodeOutput(result.candidates?.[0]?.content?.parts?.[0]?.text || "");
+        }
+
+        async function publishCommand(sessionId, luauCode) {
+            const publishUrl = API_URL_ENDPOINT + "publish";
+            const commandId = crypto.randomUUID(); 
+            
+            const payload = {
+                sessionId: sessionId, 
+                luauCode: luauCode,
+                commandId: commandId
+            };
+            
+            // Basic Retry Logic (Exponential Backoff)
+            let response;
+            for (let i = 0; i < 3; i++) {
+                try {
+                    response = await fetch(publishUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (response.ok) break;
+                } catch (e) {
+                    console.log(`Publish attempt ${i + 1} failed.`);
+                }
+                await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+            }
+
+
+            if (!response || !response.ok) {
+                const errorText = response ? await response.text() : "Network or Server Error";
+                throw new Error("Failed to publish command to API Bridge: " + (response ? response.status : 'N/A') + " - " + errorText);
+            }
+            return commandId;
+        }
+
+        generateButton.addEventListener('click', async () => {
+            const sessionId = currentSessionId;
+            const promptText = promptInput.value.trim();
+            
+            errorMessage.classList.add('hidden');
+            resultSection.classList.add('hidden'); 
+            publishStatus.textContent = '';
+            codeOutput.textContent = '';
+            
+            if (!sessionId || promptText.length < 10 || promptText === 'Create a shop GUI with a coin system...') {
+                errorMessage.textContent = "Please enter a detailed command (at least 10 characters) and ensure the bridge is connected.";
+                errorMessage.classList.remove('hidden');
+                return;
+            }
+
+            // --- Step 1: Generate Code ---
+            generateButton.disabled = true;
+            loadingIndicator.classList.remove('hidden');
+            loadingText.textContent = "Generating code via Gemini...";
+
+            let generatedCode;
+            try {
+                generatedCode = await generateCode(promptText);
+                codeOutput.textContent = generatedCode;
+                resultSection.classList.remove('hidden');
+            } catch (error) {
+                console.error("Gemini Generation Failed:", error);
+                errorMessage.textContent = error.message;
+                errorMessage.classList.remove('hidden');
+                generateButton.disabled = false;
+                loadingIndicator.classList.add('hidden');
+                return;
+            }
+
+            // --- Step 2: Publish Command ---
+            loadingText.textContent = "Publishing command to API Bridge...";
+            try {
+                const commandId = await publishCommand(sessionId, generatedCode);
+                publishStatus.textContent = "Successfully published command " + commandId.substring(0, 8) + "... to the API Bridge at " + API_URL_ENDPOINT;
+            } catch (error) {
+                console.error("Publish Failed:", error);
+                errorMessage.textContent = error.message;
+                errorMessage.classList.remove('hidden');
+            } finally {
+                generateButton.disabled = false;
+                loadingIndicator.classList.add('hidden');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+             connectSimulated();
+        });
+
+    </script>
+</body>
+</html>
