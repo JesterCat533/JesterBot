@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JesterBot AI Command Publisher</title>
     
+    <!-- Firebase SDK Imports -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global Firebase instances (accessible by the main script)
+        window.firebase = { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore, doc, setDoc, setLogLevel };
+    </script>
 
 <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -120,49 +130,50 @@
 <body class="flex min-h-screen led-background">
 
     
-
-<div id="sidebar" class="flex flex-col p-4 border-r border-gray-900 shadow-xl z-20">
+    <div id="sidebar" class="flex flex-col p-4 border-r border-gray-900 shadow-xl z-20">
         
-        
-
-<header class="mb-8 flex items-center justify-between">
+        <header class="mb-8 flex items-center justify-between">
             <h1 class="text-2xl font-semibold text-gray-200">JesterBot<span class="text-xs ml-1 text-[var(--color-accent-red)]">beta</span></h1>
             
-
-<svg class="w-6 h-6 text-gray-400 cursor-pointer red-glow-icon transition duration-150 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" onclick="handleMockClick('User Settings')"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <svg class="w-6 h-6 text-gray-400 cursor-pointer red-glow-icon transition duration-150 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" onclick="handleMockClick('User Settings')"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
         </header>
 
         
-
-<button id="newCommandButton" class="bg-[var(--color-accent-red)] hover:bg-[var(--color-accent-red-hover)] text-white font-semibold py-2 px-3 rounded-lg flex items-center justify-center mb-6 transition duration-150 red-glow-button" onclick="handleMockClick('New Command')">
+        <button id="newCommandButton" class="bg-[var(--color-accent-red)] hover:bg-[var(--color-accent-red-hover)] text-white font-semibold py-2 px-3 rounded-lg flex items-center justify-center mb-6 transition duration-150 red-glow-button" onclick="handleMockClick('New Command')">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
             New Command
         </button>
 
         
-
-<div class="flex-grow flex items-center justify-center text-gray-600 text-sm italic mb-4">
+        <div class="flex-grow flex items-center justify-center text-gray-600 text-sm italic mb-4">
             No active projects.
         </div>
 
         
-
-<div class="mt-auto pt-4 border-t border-gray-800">
+        <div class="mt-auto pt-4 border-t border-gray-800">
             <h3 class="text-sm font-semibold text-gray-400 mb-2">Bridge Status</h3>
-            <p id="tokenDisplay" class="text-xs text-[var(--color-accent-red)] break-words font-mono">
-                Status: Connected
+            <p id="tokenDisplay" class="text-xs text-gray-500 break-words font-mono">
+                Status: Initializing...
             </p>
-            <p class="text-xs text-gray-500 mt-2">API key is securely stored in JS constants.</p>
+
+            
+            <button id="connectRobloxButton" 
+                class="mt-2 w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-3 rounded-lg flex items-center justify-center transition duration-150 red-glow-button"
+                onclick="redirectToRobloxAuth()">
+                <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.372 0 0 5.372 0 12s5.372 12 12 12 12-5.372 12-12S18.628 0 12 0zm-3.5 17.5h-1c-.552 0-1-.448-1-1v-5c0-.552.448-1 1-1h1c.552 0 1 .448 1 1v5c0 .552-.448 1-1 1zm5 0h-1c-.552 0-1-.448-1-1v-5c0-.552.448-1 1-1h1c.552 0 1 .448 1 1v5c0 .552-.448 1-1 1zm4-11c0-.552-.448-1-1-1H7.5c-.552 0-1 .448-1 1v3c0 .552.448 1 1 1h10c.552 0 1-.448 1-1v-3z"/></svg>
+                Connect Roblox (OAuth2)
+            </button>
+            <p id="userIdDisplay" class="text-xs text-gray-700 mt-2 break-words hidden">
+                User ID: <span id="userIdValue"></span>
+            </p>
         </div>
 
         
-
-<div class="mt-4">
+        <div class="mt-4">
             <button class="flex items-center space-x-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-200 transition duration-150 red-glow-button border border-gray-700 w-full justify-start" onclick="handleMockClick('Discord Link')">
                 
-
-<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M20.218 6.545c-2.483-1.847-5.467-2.903-8.47-2.903-3.003 0-5.987 1.056-8.47 2.903-.787.585-.852 1.758-.14 2.298l.613.483c.712.54 1.83.433 2.457-.253.25-.275.645-.268.892.007.452.493.966.953 1.516 1.378-.857.733-1.93 1.258-3.085 1.488-.23.046-.437.186-.54.407-.156.335-.04.72.26.945.312.227.702.213.978-.02 1.62-1.39 3.428-2.18 5.32-2.18s3.7.79 5.32 2.18c.277.237.667.25.978.02.3-.225.416-.61.26-.945-.103-.22-.31-.36-.54-.407-1.155-.23-2.228-.755-3.085-1.488.55-.425 1.064-.885 1.516-1.378.247-.275.642-.282.892-.007.627.686 1.745.793 2.457.253l.613-.483c.712-.54.647-1.713-.14-2.298zM9.5 13a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm5 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3z"/>
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20.218 6.545c-2.483-1.847-5.467-2.903-8.47-2.903-3.003 0-5.987 1.056-8.47 2.903-.787.585-.852 1.758-.14 2.298l.613.483c.712.54 1.83.433 2.457-.253.25-.275.645-.268.892.007.452.493.953 1.516 1.378-.857.733-1.93 1.258-3.085 1.488-.23.046-.437.186-.54.407-.156.335-.04.72.26.945.312.227.702.213.978-.02 1.62-1.39 3.428-2.18 5.32-2.18s3.7.79 5.32 2.18c.277.237.667.25.978.02.3-.225.416-.61.26-.945-.103-.22-.31-.36-.54-.407-1.155-.23-2.228-.755-3.085-1.488.55-.425 1.064-.885 1.516-1.378.247-.275.642-.282.892-.007.627.686 1.745.793 2.457.253l.613-.483c.712-.54.647-1.713-.14-2.298zM9.5 13a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm5 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3z"/>
                 </svg>
                 <div class="text-xs text-left">
                     <p>Discord</p>
@@ -173,27 +184,23 @@
     </div>
 
     
-
-<main id="main-content" class="flex-grow flex flex-col items-center p-8 sm:p-16 z-10">
+    <main id="main-content" class="flex-grow flex flex-col items-center p-8 sm:p-16 z-10">
         
         
+        <div class="absolute top-8 right-8 flex items-center space-x-4 z-20"> 
 
-<div class="absolute top-8 right-8 flex items-center space-x-4 z-20"> 
-
-<svg class="w-5 h-5 text-gray-400 cursor-pointer red-glow-icon transition duration-150" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" onclick="handleMockClick('User Settings')"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.593.362 1.258.489 1.905.372z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            <svg class="w-5 h-5 text-gray-400 cursor-pointer red-glow-icon transition duration-150" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" onclick="handleMockClick('User Settings')"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.593.362 1.258.489 1.905.372z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
 
             
-
-<button class="bg-[var(--color-accent-red)] hover:bg-[var(--color-accent-red-hover)] text-white font-semibold py-1.5 px-4 rounded-full text-sm transition duration-150 red-glow-button" onclick="handleMockClick('Upgrade to Pro')">
+            <button class="bg-[var(--color-accent-red)] hover:bg-[var(--color-accent-red-hover)] text-white font-semibold py-1.5 px-4 rounded-full text-sm transition duration-150 red-glow-button" onclick="handleMockClick('Upgrade to Pro')">
                 Upgrade to Pro
             </button>
         </div>
 
         
+        <div class="flex flex-col items-center justify-center flex-grow w-full h-full relative z-10 pt-10"> 
 
-<div class="flex flex-col items-center justify-center flex-grow w-full h-full relative z-10 pt-10"> 
-
-<div class="w-full max-w-lg mb-8 text-center relative z-10">
+            <div class="w-full max-w-lg mb-8 text-center relative z-10">
                 <h2 class="text-3xl font-light text-gray-100 mb-2">Describe a game mechanic...</h2>
                 <p class="text-sm text-gray-400">JesterBot generates and publishes the Luau code directly to your Roblox Studio.</p>
             </div>
@@ -206,17 +213,16 @@
                 ></textarea>
                 
                 
-
-<button id="generateButton"
+                <button id="generateButton"
                     class="absolute right-3.5 top-1/2 transform -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center transition duration-200 disabled:opacity-30 disabled:hover:bg-black circular-send-button"
-                    title="Generate & Publish Command">
+                    title="Generate & Publish Command"
+                    disabled>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                 </button>
             </div>
 
             
-
-<div id="loadingIndicator" class="hidden mt-4 flex items-center space-x-2 text-[var(--color-accent-red)] relative z-10">
+            <div id="loadingIndicator" class="hidden mt-4 flex items-center space-x-2 text-[var(--color-accent-red)] relative z-10">
                 <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -226,15 +232,14 @@
         </div>
 
         
+        <div class="w-full max-w-lg mt-auto relative z-10"> 
 
-<div class="w-full max-w-lg mt-auto relative z-10"> 
-
-<div id="errorMessage" class="hidden p-4 bg-red-900 border border-red-700 text-red-300 rounded-lg shadow-xl red-glow-button mb-4">
+            <div id="errorMessage" class="hidden p-4 bg-red-900 border border-red-700 text-red-300 rounded-lg shadow-xl red-glow-button mb-4">
                 An error occurred during generation.
             </div>
 
             <div id="resultSection" class="hidden">
-                <h3 class="text-lg font-bold text-gray-300 mb-2">Published Code Preview:</h3>
+                <h3 class="text-lg font-bold text-gray-300 mb-2">Published Code Preview (Saved to Firestore):</h3>
                 <pre id="codeOutput" class="code-box p-4 rounded-lg text-sm overflow-auto max-h-48 red-glow-focus"></pre>
                 <p id="publishStatus" class="mt-2 text-sm text-[var(--color-accent-red)] font-medium"></p>
             </div>
@@ -243,26 +248,37 @@
 
     <script>
         const GEMINI_MODEL = 'gemini-2.5-flash-preview-09-2025';
-        const API_KEY = "AIzaSyDgusihjRRLQyv7p6cyN2jfw92zwDDpuEE"; 
+        const API_KEY = ""; // Kept empty for Canvas auto-injection
         
-        // Hardcoded API URL
-        const API_URL_ENDPOINT = "https://jestercat533.github.io/JesterBot/"; 
+        // --- ROBlox OAUTH Configuration ---
+        const CLIENT_ID = '6498265509897195539'; // The Client ID from your Roblox App dashboard
+        const REDIRECT_URI = 'https://jestercat533.github.io/JesterBot/';
+        const OAUTH_SCOPES = 'openid profile asset:read legacy:universe:manage asset:write'; 
+        const AUTHORIZE_URL = 'https://auth.roblox.com/oauth/v1/authorize';
+        // ------------------------------------
 
-        // --- YOUR SECURE TOKEN FROM OAUTH SIMULATION (kept for functionality) ---
-        const SECURE_TOKEN = 'RBX-CXvhfaEtBEGgTung815aKv0TzTdRpbuMBYK2qToYzWS';
-        let currentSessionId = null; 
-        // -----------------------------------------------------
+        // --- FIREBASE GLOBALS ---
+        let db;
+        let auth;
+        let userId = null;
+        let isAuthReady = false;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        // ------------------------
 
         // DOM Elements
         const promptInput = document.getElementById('promptInput');
         const generateButton = document.getElementById('generateButton');
         const tokenDisplay = document.getElementById('tokenDisplay');
+        const connectRobloxButton = document.getElementById('connectRobloxButton');
         const loadingIndicator = document.getElementById('loadingIndicator');
         const loadingText = document.getElementById('loadingText');
         const resultSection = document.getElementById('resultSection');
         const codeOutput = document.getElementById('codeOutput');
         const publishStatus = document.getElementById('publishStatus');
         const errorMessage = document.getElementById('errorMessage');
+        const userIdDisplay = document.getElementById('userIdDisplay');
+        const userIdValue = document.getElementById('userIdValue');
+
 
         const systemPrompt = `You are a specialized Luau (Roblox scripting) code generation assistant for Roblox Studio Plugins. Your task is to generate ONLY the clean, runnable Luau code that fulfills the user's request.
 
@@ -271,6 +287,64 @@ RULES:
 2. Your output MUST start with 'local function Execute()' and end with 'Execute()' for modification commands.
 3. Use 'game' to reference top-level services (e.g., game.Workspace, game:GetService("Selection")).
 4. DO NOT include any explanatory text, markdown formatting (like \`\`\`luau), or comments. Only output the code.`;
+
+        // --- FIREBASE INITIALIZATION & AUTH ---
+        async function initializeFirebase() {
+            try {
+                if (typeof window.firebase === 'undefined') {
+                    throw new Error("Firebase imports failed to load.");
+                }
+
+                const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+                
+                const app = window.firebase.initializeApp(firebaseConfig);
+                db = window.firebase.getFirestore(app);
+                auth = window.firebase.getAuth(app);
+                window.firebase.setLogLevel('debug'); // Enable Firestore logging
+
+                // 1. Listen for auth changes to set the user ID
+                window.firebase.onAuthStateChanged(auth, (user) => {
+                    userId = user ? user.uid : null;
+                    isAuthReady = true;
+                    updateUIState();
+                });
+
+                // 2. Sign in using the custom token or anonymously
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await window.firebase.signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await window.firebase.signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Firebase Initialization Error:", error);
+                tokenDisplay.textContent = `Error: Firebase failed to initialize.`;
+                isAuthReady = true; // Still set to true to avoid infinite loading
+                updateUIState();
+            }
+        }
+
+        function updateUIState() {
+            if (!isAuthReady) {
+                tokenDisplay.textContent = `Status: Initializing...`;
+                generateButton.disabled = true;
+                return;
+            }
+
+            if (userId) {
+                // User is authenticated via Firebase (Roblox OAuth is simulated success at this point)
+                generateButton.disabled = false;
+                tokenDisplay.innerHTML = `Status: <span class="font-bold text-[var(--color-accent-red)]">Connected</span>`;
+                connectRobloxButton.classList.add('hidden');
+                userIdValue.textContent = userId;
+                userIdDisplay.classList.remove('hidden');
+            } else {
+                // User is not authenticated (or initial sign-in failed)
+                generateButton.disabled = true;
+                tokenDisplay.innerHTML = `Status: <span class="font-bold text-red-400">Disconnected</span> (Firebase Auth Failed)`;
+                connectRobloxButton.classList.remove('hidden');
+                userIdDisplay.classList.add('hidden');
+            }
+        }
 
         // --- MOCK INTERACTION HANDLER ---
         function handleMockClick(action) {
@@ -285,7 +359,7 @@ RULES:
                 setTimeout(() => errorMessage.classList.add('hidden'), 3000);
             }
         }
-        window.handleMockClick = handleMockClick; // Expose to global scope for inline clicks
+        window.handleMockClick = handleMockClick; 
 
         function cleanCodeOutput(text) {
             let cleaned = text.trim();
@@ -294,24 +368,47 @@ RULES:
             return cleaned.trim();
         }
 
-        function updateAuthState(sessionId) {
-            currentSessionId = sessionId;
-            if (currentSessionId) {
-                generateButton.disabled = false;
-                tokenDisplay.innerHTML = `Status: <span class="font-bold text-[var(--color-accent-red)]">Connected</span>`;
-            } else {
-                generateButton.disabled = true;
-                tokenDisplay.innerHTML = `Status: <span class="font-bold text-red-400">Disconnected</span>`;
+        // --- OAUTH REDIRECT FUNCTION (Step 1 of 3) ---
+        window.redirectToRobloxAuth = function() {
+            const state = crypto.randomUUID(); 
+            
+            const authUrl = `${AUTHORIZE_URL}?` + new URLSearchParams({
+                client_id: CLIENT_ID,
+                redirect_uri: REDIRECT_URI,
+                scope: OAUTH_SCOPES,
+                state: state,
+                response_type: 'code',
+            }).toString();
+            
+            window.location.href = authUrl;
+        }
+
+        // --- HANDLE OAUTH CALLBACK (Simulated Token Exchange) ---
+        function handleRobloxCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const state = urlParams.get('state');
+
+            if (code) {
+                // --- CRITICAL SIMULATION ---
+                // In a real app, the server would exchange this 'code' for a secure Access Token.
+                // Here, we use the fact that the 'code' exists (user approved the OAuth flow)
+                // as a trigger to confirm the user session and enable the functionality.
+                
+                errorMessage.textContent = "Roblox connection simulated! (Code received). You can now generate commands and save them to Firestore.";
+                errorMessage.classList.remove('hidden');
+                setTimeout(() => errorMessage.classList.add('hidden'), 5000);
+                
+                // Clean up the URL query parameters
+                history.replaceState(null, null, window.location.pathname);
             }
         }
 
-        function connectSimulated() {
-             const simulatedToken = SECURE_TOKEN || crypto.randomUUID();
-             updateAuthState(simulatedToken);
-        }
 
         async function generateCode(userQuery) {
-            const apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/" + GEMINI_MODEL + ":generateContent?key=" + API_KEY;
+            // Note: API_KEY is intentionally empty and relies on the Canvas environment
+            const apiKey = API_KEY; 
+            const apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/" + GEMINI_MODEL + ":generateContent?key=" + apiKey;
             const payload = {
                 contents: [{ parts: [{ text: userQuery }] }],
                 systemInstruction: {
@@ -319,7 +416,6 @@ RULES:
                 }
             };
             
-            // Basic Retry Logic (Exponential Backoff)
             let response;
             for (let i = 0; i < 3; i++) {
                 try {
@@ -330,7 +426,7 @@ RULES:
                     });
                     if (response.ok) break;
                 } catch (e) {
-                    console.log(`Fetch attempt ${i + 1} failed.`);
+                    // Log to console, but do not throw yet
                 }
                 await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
             }
@@ -343,42 +439,28 @@ RULES:
             return cleanCodeOutput(result.candidates?.[0]?.content?.parts?.[0]?.text || "");
         }
 
-        async function publishCommand(sessionId, luauCode) {
-            const publishUrl = API_URL_ENDPOINT + "publish";
+        // --- FIREBASE PUBLISH COMMAND (Replaces the failed POST) ---
+        async function publishCommand(luauCode) {
+            if (!db || !userId) {
+                throw new Error("Firestore is not ready. Please try refreshing.");
+            }
+            
             const commandId = crypto.randomUUID(); 
+            const collectionPath = `artifacts/${appId}/users/${userId}/jesterbot_commands`;
             
-            const payload = {
-                sessionId: sessionId, 
+            const commandData = {
                 luauCode: luauCode,
-                commandId: commandId
+                timestamp: Date.now(),
+                status: 'ready',
+                userId: userId // Useful for the plugin to confirm data ownership
             };
+
+            await window.firebase.setDoc(window.firebase.doc(db, collectionPath, commandId), commandData);
             
-            // Basic Retry Logic (Exponential Backoff)
-            let response;
-            for (let i = 0; i < 3; i++) {
-                try {
-                    response = await fetch(publishUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    if (response.ok) break;
-                } catch (e) {
-                    console.log(`Publish attempt ${i + 1} failed.`);
-                }
-                await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
-            }
-
-
-            if (!response || !response.ok) {
-                const errorText = response ? await response.text() : "Network or Server Error";
-                throw new Error("Failed to publish command to API Bridge: " + (response ? response.status : 'N/A') + " - " + errorText);
-            }
             return commandId;
         }
 
         generateButton.addEventListener('click', async () => {
-            const sessionId = currentSessionId;
             const promptText = promptInput.value.trim();
             
             errorMessage.classList.add('hidden');
@@ -386,8 +468,8 @@ RULES:
             publishStatus.textContent = '';
             codeOutput.textContent = '';
             
-            if (!sessionId || promptText.length < 10 || promptText === 'Create a shop GUI with a coin system...') {
-                errorMessage.textContent = "Please enter a detailed command (at least 10 characters) and ensure the bridge is connected.";
+            if (!userId || promptText.length < 10) {
+                errorMessage.textContent = "Please enter a detailed command (at least 10 characters) and ensure Firebase/Roblox connection is ready.";
                 errorMessage.classList.remove('hidden');
                 return;
             }
@@ -395,7 +477,7 @@ RULES:
             // --- Step 1: Generate Code ---
             generateButton.disabled = true;
             loadingIndicator.classList.remove('hidden');
-            loadingText.textContent = "Generating code via Gemini...";
+            loadingText.textContent = "Generating Luau code via Gemini...";
 
             let generatedCode;
             try {
@@ -411,14 +493,15 @@ RULES:
                 return;
             }
 
-            // --- Step 2: Publish Command ---
-            loadingText.textContent = "Publishing command to API Bridge...";
+            // --- Step 2: Publish Command to Firestore ---
+            loadingText.textContent = "Saving command to Firestore...";
             try {
-                const commandId = await publishCommand(sessionId, generatedCode);
-                publishStatus.textContent = "Successfully published command " + commandId.substring(0, 8) + "... to the API Bridge at " + API_URL_ENDPOINT;
+                const commandId = await publishCommand(generatedCode);
+                
+                publishStatus.innerHTML = `Successfully saved command to **Firestore** (ID: ${commandId.substring(0, 8)}...). The Roblox Studio plugin can now retrieve this command using your **User ID** shown in the sidebar.`;
             } catch (error) {
-                console.error("Publish Failed:", error);
-                errorMessage.textContent = error.message;
+                console.error("Firestore Publish Failed:", error);
+                errorMessage.textContent = `Firestore Error: Failed to save command. ${error.message}`;
                 errorMessage.classList.remove('hidden');
             } finally {
                 generateButton.disabled = false;
@@ -427,7 +510,8 @@ RULES:
         });
 
         document.addEventListener('DOMContentLoaded', () => {
-             connectSimulated();
+             initializeFirebase();
+             handleRobloxCallback();
         });
 
     </script>
